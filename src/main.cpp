@@ -110,7 +110,6 @@ int main() {
 		check_car_s += ((double)prev_size*0.02*check_speed);
 
 		if((check_car_s > car_s) && (check_car_s - car_s) < 25){
-		  //ref_vel = 29.5;
 		  too_close = true;
 		  if(lane>0)
 		     lane = 0;
@@ -124,9 +123,6 @@ int main() {
 	  else if (ref_vel < 49.5){
 	    ref_vel += 0.224;
 	  }
-
-
-	  json msgJson;
 
 	  vector<double> ptsx;
 	  vector<double> ptsy;
@@ -143,7 +139,6 @@ int main() {
 
 		ptsy.push_back(prev_car_y);
 		ptsy.push_back(car_y);
-		 
           }
 	  else{
 	  	ref_x = previous_path_x[prev_size-1];
@@ -159,7 +154,6 @@ int main() {
 
 		ptsy.push_back(prev_ref_y);
 		ptsy.push_back(ref_y);
-
 	  }
 
 	  vector<double> next_wp0 = getXY(car_s + 30, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
@@ -189,11 +183,6 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          /**
-           * TODO: define a path made up of (x,y) points that the car will visit
-           *   sequentially every .02 seconds
-           */
-	  
 	  for (int i = 0; i < previous_path_x.size(); i++) {
   		next_x_vals.push_back(previous_path_x[i]);
   		next_y_vals.push_back(previous_path_y[i]);
@@ -224,6 +213,7 @@ int main() {
 		next_y_vals.push_back(y_point);
 	  }
 
+	  json msgJson;
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
