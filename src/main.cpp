@@ -98,30 +98,61 @@ int main() {
 		 car_s = end_path_s;
 
 	  bool too_close = false;
-	  
+	  bool rightLaneSafe = true;
+	  bool leftLaneSafe = true;
+	  bool centerLaneSafe = true;
 	  for (int i=0;i<sensor_fusion.size();i++){
 	    float d = sensor_fusion[i][6];
+	    double vx = sensor_fusion[i][3];
+	    double vy = sensor_fusion[i][4];
+	    double check_speed = sqrt(vx*vx+vy*vy);
+  	    double check_car_s = sensor_fusion[i][5];
+            check_car_s += ((double)prev_size*0.02*check_speed);
+
+	    // if the car is in the lane check if it is too close
 	    if (d < (2+4*lane+2) && d > (2+4*lane-2)){
-	    	double vx = sensor_fusion[i][3];
-		double vy = sensor_fusion[i][4];
-		double check_speed = sqrt(vx*vx+vy*vy);
-		double check_car_s = sensor_fusion[i][5];
-
-		check_car_s += ((double)prev_size*0.02*check_speed);
-
-		if((check_car_s > car_s) && (check_car_s - car_s) < 25){
+		if((check_car_s > car_s) && (check_car_s - car_s) < 30){
 		  too_close = true;
-		  if(lane>0)
-		     lane = 0;
 		}
 	    }
+	    else{
+	    	if((check_car_s - car_s) > -30 && (check_car_s - car_s) < 30){
+		   if (d > 0 && d < 4){
+		   	leftLaneSafe = false;
+		   }
+		   if (d > 4 && d < 8){
+		   	centerLaneSafe = false;
+		   }
+		   if (d >8 && d < 12){
+		   	rightLaneSafe = false;
+		   }
+		}
+	    }
+
+
 	  } 
 
 	  if(too_close){
-	    ref_vel -= 0.224;
+	    // Change from left lane to center lane
+	    if (lane == 0 && centerLaneSafe){
+	    	lane = 1;
+	    }else
+	    // Change from center to left lane
+	    if (lane == 1 && leftLaneSafe){
+	        lane = 0;
+	    }
+	    else if (lane ==1 && rightLaneSafe){
+		// Change from center to the right lane
+	    	lane = 2;
+	    }else
+	    if (lane == 2 && centerLaneSafe){
+	       lane = 1;
+	    }else{    
+	    	ref_vel -= 0.3;
+	    }
 	  }
 	  else if (ref_vel < 49.5){
-	    ref_vel += 0.224;
+	    ref_vel += 0.3;
 	  }
 
 	  vector<double> ptsx;
@@ -172,7 +203,7 @@ int main() {
 	  	double shift_x = ptsx[i]-ref_x;
 		double shift_y = ptsy[i]-ref_y;
 
-		ptsx[i] = (shift_x*cos(0-ref_yaw)-shift_y*cos(0-ref_yaw));
+		ptsx[i] = (shift_x*cos(0-ref_yaw)-shift_y*sin(0-ref_yaw));
 		ptsy[i] = (shift_x*sin(0-ref_yaw)+shift_y*cos(0-ref_yaw));
 	  }
 
